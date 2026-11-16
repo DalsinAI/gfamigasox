@@ -1,0 +1,77 @@
+diff --git a/src/formats.c b/src/formats.c
+index 3fcf438..0504add 100644
+--- a/src/formats.c
++++ b/src/formats.c
+@@ -470,6 +470,11 @@ static void UNUSED rewind_pipe(FILE * fp)
+   fp->_IO_read_ptr = fp->_IO_read_base;
+ #elif defined _MSC_VER && _MSC_VER >= 1900
+   #define NO_REWIND_PIPE
++#elif defined __amigaos__
++  /* libnix's FILE has no read pointer to wind back: give the type of
++     piped input with -t */
++  #define NO_REWIND_PIPE
++  (void)fp;
+ #elif defined _MSC_VER || defined _WIN32 || defined _WIN64 || \
+       defined _ISO_STDIO_ISO_H || defined __sgi
+   fp->_ptr = fp->_base;
+diff --git a/src/formats.h b/src/formats.h
+index 16712b8..7213d80 100644
+--- a/src/formats.h
++++ b/src/formats.h
+@@ -65,6 +65,10 @@
+ 
+ /*--------------------- Plugin or static format handlers ---------------------*/
+ 
++#if defined HAVE_AHI && (defined STATIC_AHI || !defined HAVE_LIBLTDL)
++  FORMAT(ahi)
++#endif
++
+ #if defined HAVE_ALSA && (defined STATIC_ALSA || !defined HAVE_LIBLTDL)
+   FORMAT(alsa)
+ #endif
+diff --git a/src/libsox_i.c b/src/libsox_i.c
+index a5afb8e..7aad6f6 100644
+--- a/src/libsox_i.c
++++ b/src/libsox_i.c
+@@ -62,6 +62,9 @@ static int check_dir(char * buf, size_t buflen, char const * name)
+ }
+ #endif
+ 
++#ifdef __amigaos__
++#include "amiga_tmp.h"
++#endif
+ FILE * lsx_tmpfile(void)
+ {
+   char const * path = sox_globals.tmp_path;
+@@ -92,6 +95,11 @@ FILE * lsx_tmpfile(void)
+   }
+ #endif
+ 
++#ifdef __amigaos__
++  /* AmigaDOS: an open file cannot be unlinked, and "T:" + "/x" is T:'s
++     parent: GFAmigaSoX's compat/amiga_tmp.c joins and deletes at exit */
++  return amiga_tmpfile(path);
++#endif
+   if (path && path[0]) {
+     /* Emulate tmpfile (delete on close); tmp dir is given tmp_path: */
+     char const * const end = "/libSoX.tmp.XXXXXX";
+diff --git a/src/sox.c b/src/sox.c
+index 9e59a60..de93f85 100644
+--- a/src/sox.c
++++ b/src/sox.c
+@@ -2507,6 +2507,7 @@ static char const * device_name(char const * const type)
+       || !strcmp(type, "coreaudio")
+       || !strcmp(type, "pulseaudio")
+       || !strcmp(type, "waveaudio")
++      || !strcmp(type, "ahi")
+       )
+     name = "default";
+   
+@@ -2536,6 +2537,7 @@ static char const * set_default_device(file_t * f)
+ {
+   /* Default audio driver type in order of preference: */
+   if (!f->filetype) f->filetype = getenv("AUDIODRIVER");
++  if (!f->filetype) f->filetype = try_device("ahi");
+   if (!f->filetype) f->filetype = try_device("coreaudio");
+   if (!f->filetype) f->filetype = try_device("pulseaudio");
+   if (!f->filetype) f->filetype = try_device("alsa");

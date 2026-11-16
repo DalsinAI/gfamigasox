@@ -1,0 +1,10 @@
+# What this port builds on: fetched at build time, never shipped.
+# SoX 14.4.3git: chirlu/sox master (9 May 2021), 14.4.2 with the security
+# fixes since; GPL 2 or later (sox), LGPL 2.1 or later (libsox)
+SOX_GIT=https://github.com/chirlu/sox.git
+SOX_COMMIT=42b3557e13e0fe01a83465b672d89faddbe65f49
+SOX_VERSION=14.4.3
+# Our own pieces, fetched at these commits
+# fpuauto (common/fpuauto): the FPU when there is one
+FPA_REPO=https://github.com/DalsinAI/amicradle-guest
+FPA_COMMIT=4a784c84b878fe0e9abade7006e67e1ded9b165c
