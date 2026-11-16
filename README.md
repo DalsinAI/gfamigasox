@@ -39,7 +39,7 @@ Some effects and 8SVX stereo writing use temporary files: they go in `T:`
 SoX (chirlu/sox master: 14.4.2 with the security fixes since) is fetched at
 the commit `sox.lock` pins and patched from `patches/` (the AHI format in the
 static list and first as the default device; temporary files through
-`compat/amiga_tmp.c`); `compat/soxconfig.h` stands for SoX's configure. It
+`compat/amiga_tmp.c`; piped input needs `-t`, as libnix's FILE cannot be wound back); `compat/soxconfig.h` stands for SoX's configure. It
 builds with soft float, taking the FPU where there is one (fpuauto).
 
 ## Tests
